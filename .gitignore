@@ -6,4 +6,3 @@ dist
 server/node_modules
 .DS_Store
 .claude/
-.vercel
