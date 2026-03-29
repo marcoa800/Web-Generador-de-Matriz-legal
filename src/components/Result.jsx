@@ -6,6 +6,7 @@ import {
   updateInDrive,
   getSavedDriveFile,
   saveDriveFile,
+  parseFolderId,
 } from '../services/driveService.js'
 
 export default function Result({ sheetUrl: fileName, companyName, ruc, matrix, onReset, onRedownload }) {
@@ -14,6 +15,7 @@ export default function Result({ sheetUrl: fileName, companyName, ruc, matrix, o
   const [driveUrl, setDriveUrl]       = useState('')
   const [driveError, setDriveError]   = useState('')
   const [savedFile, setSavedFile]     = useState(null)
+  const [folderInput, setFolderInput] = useState('')
 
   // Load any previously saved Drive file for this company
   useEffect(() => {
@@ -37,12 +39,13 @@ export default function Result({ sheetUrl: fileName, companyName, ruc, matrix, o
 
       let result
       if (savedFile?.fileId) {
-        // Update existing file
+        // Update existing file (keep same location)
         result = await updateInDrive(token, savedFile.fileId, blob)
         result.fileId = savedFile.fileId
       } else {
-        // Upload new file
-        result = await uploadToDrive(token, blob, xlsxName)
+        // Upload new file, optionally into a specific folder
+        const folderId = parseFolderId(folderInput)
+        result = await uploadToDrive(token, blob, xlsxName, folderId)
         saveDriveFile(ruc, result.fileId, result.url)
         setSavedFile({ fileId: result.fileId, url: result.url })
       }
@@ -101,6 +104,29 @@ export default function Result({ sheetUrl: fileName, companyName, ruc, matrix, o
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
             Google Drive
           </p>
+
+          {driveStatus === 'idle' && !hasExisting && (
+            <div className="mb-3">
+              <label className="block text-xs text-slate-500 mb-1">
+                Carpeta de destino <span className="text-slate-400">(opcional)</span>
+              </label>
+              <input
+                type="text"
+                value={folderInput}
+                onChange={(e) => setFolderInput(e.target.value)}
+                placeholder="Pega la URL de tu carpeta en Drive…"
+                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 placeholder:text-slate-300"
+              />
+              {folderInput && !parseFolderId(folderInput) && (
+                <p className="text-xs text-red-500 mt-1">URL o ID de carpeta no válido</p>
+              )}
+              {folderInput && parseFolderId(folderInput) && (
+                <p className="text-xs text-emerald-600 mt-1">
+                  Carpeta detectada: <code className="font-mono">{parseFolderId(folderInput)}</code>
+                </p>
+              )}
+            </div>
+          )}
 
           {driveStatus === 'idle' && (
             <button

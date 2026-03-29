@@ -42,11 +42,22 @@ export async function requestDriveToken() {
   })
 }
 
+// ── Parse folder ID from a Drive URL or raw ID ───────────────────────────────
+export function parseFolderId(input) {
+  if (!input) return null
+  const match = input.match(/\/folders\/([a-zA-Z0-9_-]{10,})/)
+  if (match) return match[1]
+  // If it looks like a raw ID (no slashes, reasonable length)
+  if (/^[a-zA-Z0-9_-]{10,}$/.test(input.trim())) return input.trim()
+  return null
+}
+
 // ── Upload XLSX blob → converts to Google Sheets in Drive ────────────────────
-export async function uploadToDrive(accessToken, blob, fileName) {
+export async function uploadToDrive(accessToken, blob, fileName, folderId = null) {
   const metadata = {
     name: fileName.replace(/\.xlsx$/i, ''),
     mimeType: 'application/vnd.google-apps.spreadsheet',
+    ...(folderId ? { parents: [folderId] } : {}),
   }
 
   const form = new FormData()
