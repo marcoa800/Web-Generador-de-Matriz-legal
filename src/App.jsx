@@ -140,8 +140,10 @@ export default function App() {
       {stage === 'result' && (
         <Result
           sheetUrl={sheetUrl}
-          onRedownload={() => downloadMatrixAsXlsx(answers?.empresa_nombre ?? 'Empresa', answers?.empresa_ruc ?? '', matrixData)}
+          matrix={matrixData}
           companyName={answers?.empresa_nombre}
+          ruc={answers?.empresa_ruc}
+          onRedownload={() => downloadMatrixAsXlsx(answers?.empresa_nombre ?? 'Empresa', answers?.empresa_ruc ?? '', matrixData)}
           onReset={handleReset}
         />
       )}

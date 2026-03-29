@@ -41,15 +41,12 @@ const AREA_CONFIG = {
 
 const AREA_ORDER = Object.keys(AREA_CONFIG)
 
-export function downloadMatrixAsXlsx(companyName, ruc, matrix) {
+function buildWorkbook(companyName, ruc, matrix) {
   const wb = XLSX.utils.book_new()
   const dateStr = new Date().toLocaleDateString('es-PE')
 
-  // ── 1. Hoja resumen con todas las normas ────────────────────────────────────
   addSheet(wb, 'Todas las Normas', matrix, companyName, ruc, dateStr, '1D4ED8')
 
-  // ── 2. Una hoja por área ────────────────────────────────────────────────────
-  // Agrupar por área (respetando el orden definido)
   const grouped = {}
   matrix.forEach((row) => {
     const area = row.area ?? 'Sin Área'
@@ -57,7 +54,6 @@ export function downloadMatrixAsXlsx(companyName, ruc, matrix) {
     grouped[area].push(row)
   })
 
-  // Agregar en orden definido, luego cualquier área extra que Gemini haya generado
   const orderedAreas = [
     ...AREA_ORDER.filter((a) => grouped[a]?.length > 0),
     ...Object.keys(grouped).filter((a) => !AREA_ORDER.includes(a) && grouped[a]?.length > 0),
@@ -65,17 +61,36 @@ export function downloadMatrixAsXlsx(companyName, ruc, matrix) {
 
   orderedAreas.forEach((area) => {
     const config = AREA_CONFIG[area] ?? { color: '334155', textColor: 'FFFFFF' }
-    // Renumerar ítems dentro de la pestaña
     const rows = grouped[area].map((row, idx) => ({ ...row, item: idx + 1 }))
     addSheet(wb, area, rows, companyName, ruc, dateStr, config.color)
   })
 
-  // ── 3. Descargar ────────────────────────────────────────────────────────────
   const safe = companyName.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, '').trim().replace(/\s+/g, '_')
   const fileDateStr = dateStr.replace(/\//g, '-')
   const fileName = `Matriz_Legal_SST_${safe}_${ruc}_${fileDateStr}.xlsx`
 
-  XLSX.writeFile(wb, fileName)
+  return { wb, fileName }
+}
+
+export function generateXlsxBlob(companyName, ruc, matrix) {
+  const { wb, fileName } = buildWorkbook(companyName, ruc, matrix)
+  const data = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+  const blob = new Blob([data], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  })
+  return { blob, fileName }
+}
+
+export function downloadMatrixAsXlsx(companyName, ruc, matrix) {
+  const { blob, fileName } = generateXlsxBlob(companyName, ruc, matrix)
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = fileName
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
   return fileName
 }
 
