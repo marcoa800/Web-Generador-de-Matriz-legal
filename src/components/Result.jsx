@@ -15,7 +15,10 @@ export default function Result({ sheetUrl: fileName, companyName, ruc, matrix, o
   const [driveUrl, setDriveUrl]       = useState('')
   const [driveError, setDriveError]   = useState('')
   const [savedFile, setSavedFile]     = useState(null)
-  const [folderInput, setFolderInput] = useState('')
+  const defaultFolder = import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID
+    ? `https://drive.google.com/drive/folders/${import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID}`
+    : ''
+  const [folderInput, setFolderInput] = useState(defaultFolder)
 
   // Load any previously saved Drive file for this company
   useEffect(() => {
