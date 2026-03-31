@@ -59,7 +59,7 @@ export const QUESTIONS = {
   sector: {
     id: 'sector',
     group: 'Sector y Actividades',
-    type: 'radio',
+    type: 'checkbox',
     label: '¿Cuál es el sector o rubro principal de su empresa?',
     options: [
       { value: 'mineria',       label: 'Minería' },
@@ -74,13 +74,18 @@ export const QUESTIONS = {
       { value: 'otro',          label: 'Otro' },
     ],
     next: (answer) => {
+      const selected = Array.isArray(answer) ? answer : [answer]
       const map = {
         mineria:       'mineria_tipo',
         construccion:  'construccion_tipo',
         salud:         'salud_tipo',
         hidrocarburos: 'hidrocarburos_actividades',
       }
-      return map[answer] ?? 'actividades_riesgo'
+      // Go to first matching branch found, otherwise straight to actividades_riesgo
+      for (const key of Object.keys(map)) {
+        if (selected.includes(key)) return map[key]
+      }
+      return 'actividades_riesgo'
     },
   },
 
