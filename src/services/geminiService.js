@@ -161,6 +161,18 @@ BLOQUE B — NORMAS SECTORIALES (según el perfil de la empresa)
 • D.S. N° 027-94-EM — Reglamento seguridad para instalaciones y transporte de GLP
 • RM N° 571-2000-EM/VME — Normas para diseño y construcción de estaciones de servicio
 
+▶ SECTOR ELÉCTRICO (sector = electrico):
+• D.S. N° 029-94-EM — Reglamento de Seguridad para las Actividades Eléctricas — MINEM — 25/05/1994 → trabajos en tensión, bloqueo/etiquetado (LOTO), distancias de seguridad, zonas de peligro, permisos de trabajo eléctrico, EPP dieléctrico
+• D.S. N° 020-2013-EM — Reglamento de Transmisión de Energía Eléctrica — MINEM — 03/08/2013 → requisitos SST en líneas de transmisión, fajas de servidumbre, trabajos en altura en torres
+• Resolución Directoral N° 018-2002-EM/DGE — CNE (Código Nacional de Electricidad) Suministro — MINEM → distancias mínimas de seguridad, señalización, puesta a tierra
+• Resolución Directoral N° 014-2011-EM/DGE — CNE Utilización — MINEM → instalaciones interiores, protecciones, puesta a tierra, interruptores diferenciales
+• Ley N° 25844 — Ley de Concesiones Eléctricas — Congreso — 19/11/1992 → obligaciones de seguridad de concesionarios
+• D.S. N° 009-93-EM — Reglamento SST en Instalaciones Eléctricas industriales — MINEM → bloqueo, tarjetas de seguridad, pruebas de aislamiento
+• NTP 370.053:2008 — Riesgo Eléctrico. Instalaciones eléctricas en edificios — INACAL → medidas de protección contra contacto directo e indirecto
+• NTP IEC 60900:2018 — Herramientas manuales para trabajos en tensión hasta 1000 V CA — INACAL → EPP dieléctrico certificado
+• D.S. N° 052-1993-EM — Reglamento Seguridad centrales eléctricas y subestaciones — MINEM → subestaciones, operación de equipos de alta tensión
+• RM N° 111-2013-MEM/DM — Procedimientos para supervisión seguridad eléctrica — MINEM → inspecciones OSINERGMIN, registros de mantenimiento preventivo
+
 ▶ MANUFACTURA (sector = manufactura):
 • RM N° 375-2008-TR — Ergonomía en manufactura — requisitos posturas, MMC, movimientos repetitivos
 • D.S. N° 015-2005-SA — LMP para industria manufacturera

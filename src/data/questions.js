@@ -70,6 +70,7 @@ export const QUESTIONS = {
       { value: 'agricultura',   label: 'Agricultura / Agroindustria' },
       { value: 'transporte',    label: 'Transporte y Logística' },
       { value: 'comercio',      label: 'Comercio / Retail' },
+      { value: 'electrico',     label: 'Sector Eléctrico (generación, transmisión, distribución)' },
       { value: 'servicios',     label: 'Servicios Generales / Consultoría / Oficinas' },
       { value: 'otro',          label: 'Otro' },
     ],
@@ -80,6 +81,7 @@ export const QUESTIONS = {
         construccion:  'construccion_tipo',
         salud:         'salud_tipo',
         hidrocarburos: 'hidrocarburos_actividades',
+        electrico:     'electrico_actividades',
       }
       // Go to first matching branch found, otherwise straight to actividades_riesgo
       for (const key of Object.keys(map)) {
@@ -151,6 +153,23 @@ export const QUESTIONS = {
       { value: 'transporte_cisterna',label: 'Transporte en cisternas' },
       { value: 'estaciones',       label: 'Estaciones de servicio / Grifos' },
       { value: 'almacenamiento',   label: 'Almacenamiento de combustibles' },
+    ],
+    next: () => 'actividades_riesgo',
+  },
+
+  electrico_actividades: {
+    id: 'electrico_actividades',
+    group: 'Sector y Actividades',
+    type: 'checkbox',
+    label: '¿Qué actividades del sector eléctrico realiza? (Puede marcar varias)',
+    options: [
+      { value: 'generacion',       label: 'Generación eléctrica (hidroeléctrica, termoeléctrica, solar, eólica)' },
+      { value: 'transmision',      label: 'Transmisión de energía (líneas de alta tensión)' },
+      { value: 'distribucion',     label: 'Distribución y suministro eléctrico' },
+      { value: 'mantenimiento_mt', label: 'Mantenimiento en media tensión (1 kV – 30 kV)' },
+      { value: 'mantenimiento_at', label: 'Mantenimiento en alta tensión (> 30 kV)' },
+      { value: 'instalaciones_bt', label: 'Instalaciones en baja tensión (< 1 kV)' },
+      { value: 'subestaciones',    label: 'Operación de subestaciones eléctricas' },
     ],
     next: () => 'actividades_riesgo',
   },
