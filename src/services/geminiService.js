@@ -324,54 +324,52 @@ INSTRUCCIONES DE GENERACIÓN
 // ─────────────────────────────────────────────────────────────────────────────
 const MODELS_FALLBACK = ['gemini-2.5-flash', 'gemini-2.0-flash']
 
-async function withRetry(fn, maxAttempts = 4) {
+// Modelos en orden de preferencia — si uno falla con 503 pasa al siguiente
+const MODEL_CASCADE = ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-1.5-flash']
+
+async function withRetry(buildFn, config = {}) {
   let lastErr
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      return await fn()
-    } catch (err) {
-      lastErr = err
-      const is503 = err.message?.includes('503') || err.message?.includes('high demand') || err.message?.includes('temporarily')
-      const is429 = err.message?.includes('429') || err.message?.includes('quota')
-      if ((is503) && attempt < maxAttempts) {
-        const wait = attempt * 8000 // 8s, 16s, 24s
-        console.warn(`[geminiService] 503 intento ${attempt}/${maxAttempts} — esperando ${wait/1000}s...`)
-        await new Promise(r => setTimeout(r, wait))
-        continue
+  for (const modelName of MODEL_CASCADE) {
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName, generationConfig: config })
+        return await buildFn(model)
+      } catch (err) {
+        lastErr = err
+        const is503 = err.message?.includes('503') || err.message?.includes('high demand')
+        const is429 = err.message?.includes('429') || err.message?.includes('quota')
+        if (is429) throw new Error('Cuota diaria agotada. Espera 24h o activa facturación en Google AI Studio.')
+        if (is503 && attempt < 2) {
+          console.warn(`[gemini] 503 en ${modelName} intento ${attempt} — reintentando en 6s...`)
+          await new Promise(r => setTimeout(r, 6000))
+          continue
+        }
+        if (is503) {
+          console.warn(`[gemini] 503 persistente en ${modelName} — probando siguiente modelo...`)
+          break // saltar al siguiente modelo
+        }
+        throw err
       }
-      if (is429) {
-        throw new Error('Cuota diaria agotada. Espera 24h o activa facturación en Google AI Studio.')
-      }
-      throw err
     }
   }
-  throw lastErr
+  throw new Error('Todos los modelos están saturados en este momento. Intente en unos minutos.')
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Función: obtener resumen de la empresa
 // ─────────────────────────────────────────────────────────────────────────────
 export async function generateCompanySummary(answers) {
-  return withRetry(async () => {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
-    const result = await model.generateContent(buildSummaryPrompt(answers))
-    return result.response.text().trim()
-  })
+  return withRetry((model) => model.generateContent(buildSummaryPrompt(answers))
+    .then(r => r.response.text().trim()))
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Función: generar la matriz legal completa
 // ─────────────────────────────────────────────────────────────────────────────
 export async function generateLegalMatrix(answers) {
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-flash',
-    generationConfig: {
-      temperature: 0.2,
-      maxOutputTokens: 65536,
-    },
-  })
+  const config = { temperature: 0.2, maxOutputTokens: 65536 }
 
-  const result = await withRetry(() => model.generateContent(buildMatrixPrompt(answers)))
+  const result = await withRetry((model) => model.generateContent(buildMatrixPrompt(answers)), config)
   let raw = result.response.text().trim()
 
   // Limpiar posible markdown fence
