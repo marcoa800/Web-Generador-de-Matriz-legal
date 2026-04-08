@@ -31,7 +31,7 @@ export default function App() {
       setStage('summary')
     } catch (err) {
       console.error(err)
-      setError('No se pudo conectar con la IA. Verifique su API key y conexión a internet.')
+      setError(`Error de IA: ${err.message}`)
       setStage('questionnaire')
     }
   }
