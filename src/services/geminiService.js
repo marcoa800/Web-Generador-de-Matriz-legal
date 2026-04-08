@@ -1,12 +1,38 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+// ── Groq client (OpenAI-compatible) ──────────────────────────────────────────
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY
+const GROQ_URL     = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL   = 'llama-3.3-70b-versatile'
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY
-
-if (!API_KEY) {
-  console.warn('[geminiService] VITE_GEMINI_API_KEY no está definida en .env')
+if (!GROQ_API_KEY) {
+  console.warn('[aiService] VITE_GROQ_API_KEY no está definida en .env')
 }
 
-const genAI = new GoogleGenerativeAI(API_KEY)
+async function groqChat(systemPrompt, userContent, maxTokens = 8192) {
+  const res = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${GROQ_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      temperature: 0.2,
+      max_tokens: maxTokens,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user',   content: userContent   },
+      ],
+    }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    const msg = err?.error?.message || res.statusText
+    if (res.status === 429) throw new Error('Cuota de Groq agotada. Intente en unos minutos.')
+    throw new Error(`Error Groq ${res.status}: ${msg}`)
+  }
+  const data = await res.json()
+  return data.choices[0].message.content.trim()
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  PROMPT 1: Resumen de entendimiento de la empresa
@@ -320,57 +346,25 @@ INSTRUCCIONES DE GENERACIÓN
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Helper: reintento automático ante errores 503 / alta demanda
-// ─────────────────────────────────────────────────────────────────────────────
-const MODELS_FALLBACK = ['gemini-2.5-flash', 'gemini-2.0-flash']
-
-// Modelos en orden de preferencia — si uno falla con 503 pasa al siguiente
-const MODEL_CASCADE = ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-1.5-flash']
-
-async function withRetry(buildFn, config = {}) {
-  let lastErr
-  for (const modelName of MODEL_CASCADE) {
-    for (let attempt = 1; attempt <= 2; attempt++) {
-      try {
-        const model = genAI.getGenerativeModel({ model: modelName, generationConfig: config })
-        return await buildFn(model)
-      } catch (err) {
-        lastErr = err
-        const is503 = err.message?.includes('503') || err.message?.includes('high demand')
-        const is429 = err.message?.includes('429') || err.message?.includes('quota')
-        if (is429) throw new Error('Cuota diaria agotada. Espera 24h o activa facturación en Google AI Studio.')
-        if (is503 && attempt < 2) {
-          console.warn(`[gemini] 503 en ${modelName} intento ${attempt} — reintentando en 6s...`)
-          await new Promise(r => setTimeout(r, 6000))
-          continue
-        }
-        if (is503) {
-          console.warn(`[gemini] 503 persistente en ${modelName} — probando siguiente modelo...`)
-          break // saltar al siguiente modelo
-        }
-        throw err
-      }
-    }
-  }
-  throw new Error('Todos los modelos están saturados en este momento. Intente en unos minutos.')
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 //  Función: obtener resumen de la empresa
 // ─────────────────────────────────────────────────────────────────────────────
 export async function generateCompanySummary(answers) {
-  return withRetry((model) => model.generateContent(buildSummaryPrompt(answers))
-    .then(r => r.response.text().trim()))
+  return groqChat(
+    'Eres un experto en SST/SSOMA en Perú. Responde en español formal.',
+    buildSummaryPrompt(answers),
+    2048
+  )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Función: generar la matriz legal completa
 // ─────────────────────────────────────────────────────────────────────────────
 export async function generateLegalMatrix(answers) {
-  const config = { temperature: 0.2, maxOutputTokens: 65536 }
-
-  const result = await withRetry((model) => model.generateContent(buildMatrixPrompt(answers)), config)
-  let raw = result.response.text().trim()
+  let raw = await groqChat(
+    'Eres un especialista en legislación peruana SST/SSOMA. Responde ÚNICAMENTE con JSON válido, sin texto adicional.',
+    buildMatrixPrompt(answers),
+    32768
+  )
 
   // Limpiar posible markdown fence
   raw = raw
