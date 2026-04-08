@@ -320,12 +320,43 @@ INSTRUCCIONES DE GENERACIÓN
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+//  Helper: reintento automático ante errores 503 / alta demanda
+// ─────────────────────────────────────────────────────────────────────────────
+const MODELS_FALLBACK = ['gemini-2.5-flash', 'gemini-2.0-flash']
+
+async function withRetry(fn, maxAttempts = 4) {
+  let lastErr
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn()
+    } catch (err) {
+      lastErr = err
+      const is503 = err.message?.includes('503') || err.message?.includes('high demand') || err.message?.includes('temporarily')
+      const is429 = err.message?.includes('429') || err.message?.includes('quota')
+      if ((is503) && attempt < maxAttempts) {
+        const wait = attempt * 8000 // 8s, 16s, 24s
+        console.warn(`[geminiService] 503 intento ${attempt}/${maxAttempts} — esperando ${wait/1000}s...`)
+        await new Promise(r => setTimeout(r, wait))
+        continue
+      }
+      if (is429) {
+        throw new Error('Cuota diaria agotada. Espera 24h o activa facturación en Google AI Studio.')
+      }
+      throw err
+    }
+  }
+  throw lastErr
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 //  Función: obtener resumen de la empresa
 // ─────────────────────────────────────────────────────────────────────────────
 export async function generateCompanySummary(answers) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
-  const result = await model.generateContent(buildSummaryPrompt(answers))
-  return result.response.text().trim()
+  return withRetry(async () => {
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+    const result = await model.generateContent(buildSummaryPrompt(answers))
+    return result.response.text().trim()
+  })
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -340,7 +371,7 @@ export async function generateLegalMatrix(answers) {
     },
   })
 
-  const result = await model.generateContent(buildMatrixPrompt(answers))
+  const result = await withRetry(() => model.generateContent(buildMatrixPrompt(answers)))
   let raw = result.response.text().trim()
 
   // Limpiar posible markdown fence
