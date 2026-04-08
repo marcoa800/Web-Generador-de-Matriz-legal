@@ -12,6 +12,11 @@ const HEADERS = [
   'Fecha de Emisión',
   'Tipo de Requisito',
   'Cómo Cumplir',
+  'Responsable',
+  'Evidencia Requerida',
+  'Plazo / Frecuencia',
+  'Infracción SUNAFIL',
+  'Estado',
 ]
 
 const ROW_KEYS = [
@@ -26,9 +31,14 @@ const ROW_KEYS = [
   'fecha_emision',
   'tipo_requisito',
   'como_cumplir',
+  'responsable',
+  'evidencia_requerida',
+  'plazo',
+  'sancion_sunafil',
+  'estado',
 ]
 
-const COL_WIDTHS = [6, 18, 28, 48, 44, 22, 14, 20, 14, 16, 55]
+const COL_WIDTHS = [6, 18, 28, 48, 44, 22, 14, 20, 14, 16, 55, 28, 40, 18, 24, 16]
 
 // Orden y color de cabecera por área
 const AREA_CONFIG = {
@@ -138,10 +148,14 @@ function addSheet(wb, sheetName, rows, companyName, ruc, dateStr, headerColor) {
     for (let c = 0; c < HEADERS.length; c++) {
       const cellRef = XLSX.utils.encode_cell({ r, c })
       if (!ws[cellRef]) ws[cellRef] = { v: '', t: 's' }
-      const hAlign = [0, 6, 7, 8, 9].includes(c) ? 'center' : 'left'
+      // c=0 Item, c=6 Artículo, c=7 Emisor, c=8 Fecha, c=9 Tipo, c=13 Plazo, c=14 Infracción, c=15 Estado
+      // c=0 Item, c=6 Artículo, c=7 Emisor, c=8 Fecha, c=9 Tipo, c=13 Plazo, c=14 Infracción, c=15 Estado
+      const hAlign = [0, 6, 7, 8, 9, 13, 14, 15].includes(c) ? 'center' : 'left'
+      // Columna Estado (c=15): fondo amarillo para indicar que el usuario debe completarla
+      const cellFill = c === 15 ? 'FEF9C3' : fillColor
       ws[cellRef].s = {
         font:      { sz: 9, name: 'Calibri' },
-        fill:      { fgColor: { rgb: fillColor } },
+        fill:      { fgColor: { rgb: cellFill } },
         alignment: { horizontal: hAlign, vertical: 'top', wrapText: true },
         border:    border('thin'),
       }

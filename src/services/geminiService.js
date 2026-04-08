@@ -43,7 +43,7 @@ PERFIL DE LA EMPRESA
 ${JSON.stringify(answers, null, 2)}
 
 ═══════════════════════════════════════
-ESTRUCTURA — 11 CAMPOS EXACTOS
+ESTRUCTURA — 15 CAMPOS EXACTOS
 ═══════════════════════════════════════
 Cada objeto JSON debe tener EXACTAMENTE:
 1. "item"                  → Número secuencial entero
@@ -70,6 +70,11 @@ Cada objeto JSON debe tener EXACTAMENTE:
 9. "fecha_emision"          → DD/MM/YYYY de publicación en El Peruano
 10. "tipo_requisito"        → "Legal" | "Reglamentario" | "Técnico"
 11. "como_cumplir"          → Acción concreta y sencilla para cumplir (máx. 260 caracteres). Inicia con verbo: Elaborar, Implementar, Realizar, Contratar, Registrar, Publicar, Capacitar, Monitorear, etc.
+12. "responsable"           → Rol interno típico a cargo. Ej: "Responsable SST" | "Médico Ocupacional" | "RRHH / Administración" | "Gerencia General" | "Jefe de Operaciones" | "Supervisor de Área" | "Jefe de Mantenimiento"
+13. "evidencia_requerida"   → Documento o registro que prueba el cumplimiento (máx. 180 caracteres). Ej: "Acta de constitución del Comité SST firmada", "Registro de monitoreo de ruido con firma del trabajador", "Contrato de SCTR vigente"
+14. "plazo"                 → Frecuencia o periodicidad de cumplimiento. SOLO: "Permanente" | "Anual" | "Semestral" | "Trimestral" | "Mensual" | "Una sola vez" | "Según programa" | "Antes del inicio de actividades"
+15. "sancion_sunafil"       → Gravedad y referencia según D.S. 015-2019-TR. SOLO: "Leve — hasta 5 UIT" | "Grave — hasta 20 UIT" | "Muy Grave — hasta 50 UIT"
+16. "estado"                → Dejar siempre como cadena vacía "" (el usuario lo completará)
 
 ═══════════════════════════════════════════════════════════
 BLOQUE A — NORMAS UNIVERSALES (TODAS LAS EMPRESAS — 100%)
@@ -305,7 +310,7 @@ Incluir si los aspectos ambientales son distintos de "ninguno":
 ═══════════════════════════════════════════════════════════
 INSTRUCCIONES DE GENERACIÓN
 ═══════════════════════════════════════════════════════════
-1. CANTIDAD: Genera entre 70 y 100 requisitos. Cada norma importante debe dar origen a MÚLTIPLES filas (una por cada requisito distinto que establece).
+1. CANTIDAD: Genera entre 70 y 100 requisitos. TODOS los objetos deben tener los 16 campos (incluido "estado": ""). Cada norma importante debe dar origen a MÚLTIPLES filas (una por cada requisito distinto que establece).
 2. ENFOQUE: Cada fila debe ser un requisito ESPECÍFICO y ACCIONABLE, no una norma completa. Ej: en vez de "Cumplir la Ley 29783", escribe "Constituir Comité de SST con representantes de empleador y trabajadores, elegidos por votación".
 3. "como_cumplir": Redacción práctica con verbos de acción. Ej: "Realizar monitoreo de ruido con sonómetro calibrado cada 6 meses. Comparar con LMP. Si supera 85 dB(A), implementar controles de ingeniería y EPP auditivo."
 4. "tema": Usar siempre el más específico. Si hay duda entre "Accidentes e Incidentes" e "Investigación de Accidentes", usa "Investigación de Accidentes".
